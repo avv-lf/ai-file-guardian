@@ -18,27 +18,29 @@ def analyze_duplicates(file_paths):
     if not file_paths:
         return "没有发现重复文件，无需分析。"
 
-    # 构建 Prompt (提示词)
+        # 让 AI 只输出一个最应该保留的完整路径
     prompt = f"""
-    你是一个专业的文件管家。我通过哈希算法发现以下几个文件的内容是 100% 完全相同的（互为副本）：
+    你是一个专业的文件管家。我通过哈希算法发现以下几个文件的内容是 100% 完全相同的：
     {file_paths}
     
-    请在这些文件中，选择一个最值得保留的（比如名字最规范、没有多余后缀的），删除另外的副本。
-    请给出明确的保留建议和删除建议，并用中文解释你的理由。请简明扼要。
+    请从中选择一个最应该保留的文件（比如名字最规范、没有多余后缀的）。
+    只输出它的完整路径，不要输出任何其他的解释文字，也不要加引号。
     """
     
     print("\n正在呼叫 AI 分析中，请稍候...")
     
     try:
         response = client.chat.completions.create(
-            model="glm-4-flash",  # 智谱免费模型
+            model="glm-4-flash",
             messages=[
-                {"role": "system", "content": "你是一个专业的AI文件管家，回答要简明扼要。"},
+                {"role": "system", "content": "你是一个专业的AI文件管家。"},
                 {"role": "user", "content": prompt}
             ],
             stream=False
         )
-        return response.choices[0].message.content
+        # 去掉 AI 可能会加上的空格
+        result = response.choices[0].message.content.strip()
+        return result
         
     except Exception as e:
         return f"AI 分析失败，报错信息：{e}"
